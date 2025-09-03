@@ -7,14 +7,13 @@ import json
 import subprocess
 from dataclasses import dataclass, asdict
 from typing import Optional, List, Dict, Any
-
+# GUI
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QPushButton, QLabel,
     QTableWidget, QTableWidgetItem, QHBoxLayout, QLineEdit, QMessageBox,
     QComboBox, QCheckBox, QHeaderView
 )
 from PyQt5.QtCore import pyqtSignal, QObject, Qt
-
 
 from scapy.all import sniff, IP, TCP, UDP, Raw, Ether
 
@@ -54,10 +53,7 @@ class Rule:
             if int(self.dst_port) != int(pkt['dport']):
                 return False
         return True
-
-# ---------------------------
-# Persistence: DB & rules
-# ---------------------------
+# DB & rules
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -98,10 +94,7 @@ def load_rules() -> List[Rule]:
 def save_rules(rules: List[Rule]):
     with open(RULES_PATH, 'w') as f:
         json.dump([asdict(r) for r in rules], f, indent=2)
-
-# ---------------------------
-# iptables enforcement helpers
-# ---------------------------
+# iptables
 def iptables_add_block_rule(rule: Rule) -> bool:
     """
     Adds an iptables rule for blocking based on the rule fields.
@@ -147,10 +140,7 @@ def iptables_remove_block_rule(rule: Rule) -> bool:
     except subprocess.CalledProcessError:
         # Could be multiple matches or slightly different; ignore failure.
         return False
-
-# ---------------------------
-# Packet sniffing and processing
-# ---------------------------
+# packet sniffing and processing
 class RuleEngine:
     def __init__(self):
         self._rules: List[Rule] = load_rules()
@@ -214,9 +204,8 @@ class RuleEngine:
 
 rule_engine = RuleEngine()
 
-# ---------------------------
-# Sniffer thread
-# ---------------------------
+# Sniffer
+
 class SnifferThread(threading.Thread):
     def __init__(self, gui_signaler):
         super().__init__(daemon=True)
@@ -281,16 +270,10 @@ class SnifferThread(threading.Thread):
             sniff(prn=process, store=0)
         except Exception as e:
             print("Sniffer stopped or error:", e)
-
-# ---------------------------
-# GUI signaler
-# ---------------------------
+# GUI signaller
 class GuiSignaler(QObject):
     packet_detected = pyqtSignal(object, bool, object)  # pkt_dict, suspicious(bool), rule_id or None
-
-# ---------------------------
-# GUI
-# ---------------------------
+# GUI 
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
@@ -507,9 +490,7 @@ class MainWindow(QWidget):
             pass
         event.accept()
 
-# ---------------------------
-# Entrypoint
-# ---------------------------
+#Entrypoint
 def main():
     # initialize DB and rules
     init_db()
@@ -521,3 +502,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
