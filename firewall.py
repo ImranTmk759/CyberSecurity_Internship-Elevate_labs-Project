@@ -7,7 +7,7 @@ import json
 import subprocess
 from dataclasses import dataclass, asdict
 from typing import Optional, List, Dict, Any
-# GUI
+
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QPushButton, QLabel,
     QTableWidget, QTableWidgetItem, QHBoxLayout, QLineEdit, QMessageBox,
@@ -19,23 +19,22 @@ from scapy.all import sniff, IP, TCP, UDP, Raw, Ether
 
 DB_PATH = "packet_audit.db"
 RULES_PATH = "rules.json"
-MAX_DISPLAY_PACKETS = 200  # rows in GUI table
+MAX_DISPLAY_PACKETS = 200  
 
 class Rule:
     id: int
-    action: str  # 'allow' or 'block'
+    action: str  
     src_ip: Optional[str] = None
     dst_ip: Optional[str] = None
     src_port: Optional[int] = None
     dst_port: Optional[int] = None
-    protocol: Optional[str] = None  # 'tcp'|'udp'|'ip'|'any'
+    protocol: Optional[str] = None  
     description: Optional[str] = None
     enabled: bool = True
     enforce_iptables: bool = False
 
     def matches_packet(self, pkt: Dict[str, Any]) -> bool:
         """Given a packet dict, return True if rule matches it."""
-        # pkt keys: ts, src, dst, sport, dport, proto, raw, summary
         if not self.enabled:
             return False
         # protocol
@@ -96,10 +95,6 @@ def save_rules(rules: List[Rule]):
         json.dump([asdict(r) for r in rules], f, indent=2)
 # iptables
 def iptables_add_block_rule(rule: Rule) -> bool:
-    """
-    Adds an iptables rule for blocking based on the rule fields.
-    Returns True if successful.
-    """
     # Build basic command: iptables -I INPUT -s <ip> -p tcp --dport <port> -j DROP
     cmd = ["iptables", "-I", "INPUT", "1"]
     if rule.src_ip:
@@ -119,11 +114,6 @@ def iptables_add_block_rule(rule: Rule) -> bool:
         return False
 
 def iptables_remove_block_rule(rule: Rule) -> bool:
-    """
-    Attempts to remove a matching iptables DROP rule.
-    This is a naive approach: tries to delete a rule constructed similarly to how it was added.
-    """
-    # Use -D instead of -I
     cmd = ["iptables", "-D", "INPUT"]
     if rule.src_ip:
         cmd += ["-s", rule.src_ip]
@@ -138,9 +128,9 @@ def iptables_remove_block_rule(rule: Rule) -> bool:
         subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return True
     except subprocess.CalledProcessError:
-        # Could be multiple matches or slightly different; ignore failure.
+        
         return False
-# packet sniffing and processing
+
 class RuleEngine:
     def __init__(self):
         self._rules: List[Rule] = load_rules()
@@ -217,12 +207,11 @@ class SnifferThread(threading.Thread):
         self._running.clear()
 
     def run(self):
-        # sniff with scapy; using callback
+    
         def process(pkt):
             if not self._running.is_set():
-                return False  # stop
-            # Only process IP packets
-            if not pkt.haslayer(IP):
+                return False  
+               if not pkt.haslayer(IP):
                 return
             ip = pkt.getlayer(IP)
             proto = ""
@@ -251,29 +240,28 @@ class SnifferThread(threading.Thread):
                 "raw": bytes(pkt) if pkt is not None else b''
             }
 
-            # Evaluate rules
+            
             matching_rule = rule_engine.evaluate_packet(pkt_dict)
             if matching_rule:
-                # if block action -> log as suspicious
+                
                 if matching_rule.action == 'block':
                     log_packet(pkt_dict)
                     self.gui_signal.packet_detected.emit(pkt_dict, True, matching_rule.id)
                 else:
-                    # allowed
+                    
                     self.gui_signal.packet_detected.emit(pkt_dict, False, matching_rule.id)
             else:
-                # No rule matched: treat as normal (you can choose to log some)
+            
                 self.gui_signal.packet_detected.emit(pkt_dict, False, None)
 
-        # sniff until stopped; store=0 to avoid memory growth
         try:
             sniff(prn=process, store=0)
         except Exception as e:
             print("Sniffer stopped or error:", e)
-# GUI signaller
+
 class GuiSignaler(QObject):
-    packet_detected = pyqtSignal(object, bool, object)  # pkt_dict, suspicious(bool), rule_id or None
-# GUI 
+    packet_detected = pyqtSignal(object, bool, object)  
+    
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
@@ -285,7 +273,7 @@ class MainWindow(QWidget):
         self.sniffer = SnifferThread(self.signaler)
         self.sniffer.start()
 
-        # UI elements
+        
         layout = QVBoxLayout()
         top_bar = QHBoxLayout()
 
@@ -311,7 +299,7 @@ class MainWindow(QWidget):
         layout.addWidget(QLabel("Live packets (most recent at top). Suspicious packets highlighted red."))
         layout.addWidget(self.table)
 
-        # Rule editor
+    
         rule_layout = QHBoxLayout()
         self.action_combo = QComboBox()
         self.action_combo.addItems(["block", "allow"])
@@ -335,7 +323,7 @@ class MainWindow(QWidget):
         rule_layout.addWidget(add_rule_btn)
         layout.addLayout(rule_layout)
 
-        # Rules list & controls
+        
         self.rules_table = QTableWidget(0, 7)
         self.rules_table.setHorizontalHeaderLabels(["ID", "Action", "Src", "Dst", "SPort", "DPort", "Proto"])
         self.rules_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -490,9 +478,8 @@ class MainWindow(QWidget):
             pass
         event.accept()
 
-#Entrypoint
 def main():
-    # initialize DB and rules
+ 
     init_db()
 
     app = QApplication(sys.argv)
@@ -502,4 +489,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
