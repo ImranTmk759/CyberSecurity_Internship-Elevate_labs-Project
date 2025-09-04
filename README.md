@@ -11,7 +11,7 @@ This project is a **lightweight personal firewall** built using **Python**, desi
 The firewall works at two levels:
 
 1. **Packet Monitoring & Filtering** – Uses **Scapy** to sniff incoming and outgoing traffic in real-time, applying filtering rules defined by the user.
-2. **System-Level Enforcement** – Optionally integrates with **iptables** (Linux) to enforce rules at the kernel level for stronger security.
+2. **System-Level Enforcement** – Optionally integrates with **iptables**  to enforce rules at the kernel level for stronger security.
 
 Additionally, a **PyQt5-based GUI** is included to provide live monitoring of network traffic and easy rule management, making the tool user-friendly for both technical and non-technical users.
 
@@ -43,7 +43,7 @@ This project can serve as an **educational tool** to understand firewalls, packe
 * Used to **capture, analyze, and filter packets** in real time.
 * Enables creation of custom filtering logic based on IP, port, and protocol.
 
-### 3. **iptables** (Linux only)
+### 3. **iptables**
 
 * A built-in firewall utility in Linux.
 * Allows system-level packet filtering and rule enforcement.
@@ -55,10 +55,6 @@ This project can serve as an **educational tool** to understand firewalls, packe
 * Used to build a **modern GUI** for live monitoring of traffic.
 * Provides interactive components for rule creation, visualization of logs, and system alerts.
 
-### 5. **Logging (Python’s logging module)**
-
-* Used to maintain audit trails of suspicious packets.
-* Logs include details like timestamp, source/destination IP, port, and protocol.
 
 ---
 
