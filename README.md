@@ -1,5 +1,4 @@
 # CyberSecurity_Internship-Elevate_labs-Project
-Here’s a polished **GitHub-ready project description** you can use for your Personal Firewall project, including details about the tools and technologies used:
 
 ---
 
